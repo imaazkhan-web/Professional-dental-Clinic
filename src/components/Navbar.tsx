@@ -54,7 +54,7 @@ export function Navbar() {
         {/* Right Side Actions on Mobile: Book a visit CTA + Hamburger Menu */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <Link
-            href="/#book"
+            href="/book"
             onClick={closeMenu}
             className="inline-flex items-center justify-center min-h-[36px] sm:min-h-[44px] md:min-h-[48px] px-2.5 sm:px-4 md:px-6 rounded-full font-semibold text-xs sm:text-sm md:text-base border-2 border-[#2F6FD0] bg-[#2F6FD0] text-white hover:bg-[#255bb0] hover:border-[#255bb0] transition-colors whitespace-nowrap shrink-0"
           >
@@ -121,6 +121,15 @@ export function Navbar() {
             >
               Find us
             </Link>
+            <div className="pt-2 mt-1 border-t border-[#D3E2F7]">
+              <Link
+                href="/book"
+                onClick={closeMenu}
+                className="w-full inline-flex items-center justify-center min-h-[44px] px-4 rounded-full font-semibold text-base border-2 border-[#2F6FD0] bg-[#2F6FD0] text-white hover:bg-[#255bb0] transition-colors"
+              >
+                Book a visit
+              </Link>
+            </div>
           </nav>
         </>
       )}

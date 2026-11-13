@@ -133,7 +133,7 @@ export default async function TreatmentPage({ params }: TreatmentPageProps) {
             clarify any questions you have beforehand.
           </p>
           <Link
-            href="/#book"
+            href="/book"
             className="inline-flex items-center justify-center min-h-[48px] px-8 rounded-full font-semibold text-base border-2 border-[#2F6FD0] bg-[#2F6FD0] text-white hover:bg-[#255bb0] hover:border-[#255bb0] active:scale-[0.98] transition-all"
           >
             Request an appointment

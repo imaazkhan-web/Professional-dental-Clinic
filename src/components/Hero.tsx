@@ -1,12 +1,12 @@
+import Image from "next/image";
 import Link from "next/link";
-import { AppointmentForm } from "@/components/AppointmentForm";
 import { siteConfig } from "@/lib/site";
 
 export function Hero() {
   return (
     <section className="w-full bg-white">
-      <div className="max-w-[1200px] mx-auto px-6 py-12 sm:py-14 lg:py-18">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-12 items-center">
+      <div className="max-w-[1200px] mx-auto px-6 py-12 sm:py-16 lg:py-20">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-12 items-start">
           {/* Left Column: Copy & Actions */}
           <div>
             <span className="text-xs sm:text-[13px] font-bold tracking-widest text-[#1F57AE] uppercase">
@@ -24,9 +24,16 @@ export function Hero() {
 
             {/* 3 Call-To-Action Buttons */}
             <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href="/book"
+                className="inline-flex items-center justify-center min-h-[48px] px-6 rounded-full font-semibold text-base border-2 border-[#2F6FD0] bg-[#2F6FD0] text-white hover:bg-[#255bb0] hover:border-[#255bb0] active:scale-[0.98] transition-all"
+              >
+                Book appointment
+              </Link>
+
               <a
                 href={`tel:${siteConfig.phoneRaw}`}
-                className="inline-flex items-center justify-center min-h-[48px] px-6 rounded-full font-semibold text-base border-2 border-[#2F6FD0] bg-[#2F6FD0] text-white hover:bg-[#255bb0] hover:border-[#255bb0] active:scale-[0.98] transition-all"
+                className="inline-flex items-center justify-center min-h-[48px] px-6 rounded-full font-semibold text-base border-2 border-[#2F6FD0] bg-white text-[#1F57AE] hover:bg-[#EAF2FD] active:scale-[0.98] transition-all"
               >
                 Call now
               </a>
@@ -39,19 +46,23 @@ export function Hero() {
               >
                 WhatsApp us
               </a>
-
-              <Link
-                href="#treatments"
-                className="inline-flex items-center justify-center min-h-[48px] px-6 rounded-full font-semibold text-base border-2 border-[#2F6FD0] bg-white text-[#1F57AE] hover:bg-[#EAF2FD] active:scale-[0.98] transition-all"
-              >
-                View treatments
-              </Link>
             </div>
           </div>
 
-          {/* Right Column: Appointment Form Card (stacks below on mobile) */}
-          <div className="w-full">
-            <AppointmentForm />
+          {/* Right Column: Hero Image with Caption */}
+          <div className="w-full max-w-[380px] sm:max-w-[460px] lg:max-w-none mx-auto">
+            <Image
+              src="/images/hero.webp.webp"
+              alt="Clean dental treatment room with a dental chair"
+              width={1200}
+              height={802}
+              priority
+              sizes="(min-width:1024px) 50vw, 100vw"
+              className="w-full h-auto aspect-[3/2] object-cover rounded-2xl"
+            />
+            <p className="mt-2 text-xs text-[#6B82A0] text-center lg:text-left">
+              Stock photo, not our clinic
+            </p>
           </div>
         </div>
       </div>
