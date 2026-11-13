@@ -3,54 +3,50 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-
-// Zod validation schema matching strict requirements
-const appointmentSchema = z.object({
-  fullName: z
-    .string()
-    .min(3, "Name must be at least 3 characters long"),
-  phone: z
-    .string()
-    .regex(
-      /^(?:\+92\s?3|03)\d{2}[\s-]?\d{7}$/,
-      "Please enter a valid Pakistani phone number (e.g. 03XX XXXXXXX or +92 3XX XXXXXXX)"
-    ),
-  treatment: z
-    .string()
-    .refine((val) => val !== "" && val !== "Select treatment", {
-      message: "Please select a treatment",
-    }),
-  preferredTime: z.string().optional(),
-});
-
-type AppointmentFormData = z.infer<typeof appointmentSchema>;
+import {
+  appointmentSchema,
+  type AppointmentInput,
+  type TreatmentSlug,
+} from "@/lib/appointment-schema";
+import { createAppointment } from "@/app/book/actions";
+import { treatments } from "@/data/treatments";
 
 export function AppointmentForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<AppointmentFormData>({
+  } = useForm<AppointmentInput>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
       fullName: "",
       phone: "",
-      treatment: "Select treatment",
-      preferredTime: "Any time",
+      treatment: "" as unknown as TreatmentSlug,
+      preferredTime: "any",
     },
   });
 
-  const onSubmit = () => {
-    // Client-only as specified
-    setIsSubmitted(true);
+  const onSubmit = async (data: AppointmentInput) => {
+    setServerError(null);
+    try {
+      const response = await createAppointment(data);
+      if (response.success) {
+        setIsSubmitted(true);
+      } else {
+        setServerError(response.message || "Something went wrong, please call us");
+      }
+    } catch {
+      setServerError("Something went wrong, please call us");
+    }
   };
 
   const handleReset = () => {
     reset();
+    setServerError(null);
     setIsSubmitted(false);
   };
 
@@ -156,14 +152,12 @@ export function AppointmentForm() {
                   : "border-[#5F7FAE] focus:border-[#2F6FD0]"
               }`}
             >
-              <option value="Select treatment">Select treatment</option>
-              <option value="Checkup and cleaning">Checkup and cleaning</option>
-              <option value="Filling or root canal">Filling or root canal</option>
-              <option value="Whitening">Whitening</option>
-              <option value="Braces and aligners">Braces and aligners</option>
-              <option value="Implants and crowns">Implants and crowns</option>
-              <option value="Children's dentistry">Children&apos;s dentistry</option>
-              <option value="Not sure">Not sure</option>
+              <option value="">Select treatment</option>
+              {treatments.map((treatment) => (
+                <option key={treatment.slug} value={treatment.slug}>
+                  {treatment.title}
+                </option>
+              ))}
             </select>
             {errors.treatment && (
               <p className="text-red-600 text-xs sm:text-sm font-medium mt-1">
@@ -172,7 +166,7 @@ export function AppointmentForm() {
             )}
           </div>
 
-          {/* Preferred Time (Optional) */}
+          {/* Preferred Time */}
           <div>
             <label
               htmlFor="preferredTime"
@@ -185,12 +179,19 @@ export function AppointmentForm() {
               {...register("preferredTime")}
               className="w-full min-h-[48px] rounded-[10px] border-2 border-[#5F7FAE] bg-white px-3 py-2 text-base text-[#0F2A4A] transition-colors focus:border-[#2F6FD0] focus:outline-none"
             >
-              <option value="Any time">Any time</option>
-              <option value="Morning">Morning (9 AM – 1 PM)</option>
-              <option value="Afternoon">Afternoon (1 PM – 5 PM)</option>
-              <option value="Evening">Evening (5 PM – 9 PM)</option>
+              <option value="any">Any time</option>
+              <option value="morning">Morning (9 AM – 1 PM)</option>
+              <option value="afternoon">Afternoon (1 PM – 5 PM)</option>
+              <option value="evening">Evening (5 PM – 9 PM)</option>
             </select>
           </div>
+
+          {/* Server Error Message */}
+          {serverError && (
+            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm font-medium text-center">
+              {serverError}
+            </div>
+          )}
 
           {/* Submit Button */}
           <button
@@ -211,4 +212,3 @@ export function AppointmentForm() {
     </div>
   );
 }
-
