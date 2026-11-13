@@ -45,6 +45,7 @@ export const appointmentSchema = z.object({
       message: "Please select a preferred time",
     })
     .default("any"),
+  website: z.string().optional(),
 });
 
 export type AppointmentInput = z.input<typeof appointmentSchema>;

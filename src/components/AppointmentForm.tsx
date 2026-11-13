@@ -27,6 +27,7 @@ export function AppointmentForm() {
       phone: "",
       treatment: "" as unknown as TreatmentSlug,
       preferredTime: "any",
+      website: "",
     },
   });
 
@@ -80,7 +81,22 @@ export function AppointmentForm() {
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-2 space-y-3.5" noValidate>
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-2 space-y-3.5 relative" noValidate>
+          {/* Honeypot field (hidden via CSS, not display:none, aria-hidden, tabIndex -1, autocomplete off) */}
+          <div
+            className="absolute opacity-0 pointer-events-none -z-50 h-0 w-0 overflow-hidden"
+            aria-hidden="true"
+          >
+            <label htmlFor="website">Website</label>
+            <input
+              id="website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              {...register("website")}
+            />
+          </div>
+
           {/* Full Name */}
           <div>
             <label
