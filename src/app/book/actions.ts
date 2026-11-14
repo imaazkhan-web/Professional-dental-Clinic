@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { appointmentSchema } from "@/lib/appointment-schema";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { checkIpRateLimit } from "@/lib/rate-limit";
+import { sendAppointmentEmail } from "@/lib/email";
 
 export type ActionResponse = {
   success: boolean;
@@ -88,6 +89,19 @@ export async function createAppointment(
         success: false,
         message: GENERIC_ERROR_MESSAGE,
       };
+    }
+
+    // 7. Insert kamyab hone ke BAAD email notification bhejo
+    // Email fail ho to bhi appointment save rahe aur user ko success dikhe
+    try {
+      await sendAppointmentEmail({
+        fullName: validData.fullName,
+        phone: validData.phone,
+        treatment: validData.treatment,
+        preferredTime: validData.preferredTime,
+      });
+    } catch {
+      console.error("Failed to send appointment notification email");
     }
 
     return {
