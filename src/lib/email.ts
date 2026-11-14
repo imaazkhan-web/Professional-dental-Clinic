@@ -74,10 +74,9 @@ export async function sendAppointmentEmail(
     });
 
     if (error) {
-      console.error("Resend API error while sending notification email");
+      console.error(error.name);
     }
-  } catch {
-    console.error("Resend network error while sending notification email");
+  } catch (err) {
+    console.error(err instanceof Error ? err.name : "Error");
   }
 }
-

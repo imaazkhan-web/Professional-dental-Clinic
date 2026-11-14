@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { siteConfig } from "@/lib/site";
 
 export function Footer() {
@@ -40,8 +41,14 @@ export function Footer() {
 
         {/* Legal / Project Disclaimer */}
         <p className="mt-8 pt-8 border-t border-white/10 text-sm text-[#C5D6EE] leading-relaxed">
-          &copy; {new Date().getFullYear()} {siteConfig.name} &middot; Privacy
-          policy &middot; Practice project, not a real clinic
+          &copy; {new Date().getFullYear()} {siteConfig.name} &middot;{" "}
+          <Link
+            href="/privacy"
+            className="hover:text-white underline-offset-4 hover:underline transition-colors"
+          >
+            Privacy policy
+          </Link>{" "}
+          &middot; Practice project, not a real clinic
         </p>
       </div>
     </footer>

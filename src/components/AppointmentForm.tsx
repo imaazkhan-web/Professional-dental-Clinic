@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -111,11 +112,10 @@ export function AppointmentForm() {
               autoComplete="name"
               placeholder="e.g. Ahmad Ali"
               {...register("fullName")}
-              className={`w-full min-h-[48px] rounded-[10px] border-2 bg-white px-3 py-2 text-base text-[#0F2A4A] transition-colors focus:outline-none ${
-                errors.fullName
+              className={`w-full min-h-[48px] rounded-[10px] border-2 bg-white px-3 py-2 text-base text-[#0F2A4A] transition-colors focus:outline-none ${errors.fullName
                   ? "border-red-500 focus:border-red-500"
                   : "border-[#5F7FAE] focus:border-[#2F6FD0]"
-              }`}
+                }`}
             />
             {errors.fullName && (
               <p className="text-red-600 text-xs sm:text-sm font-medium mt-1">
@@ -138,11 +138,10 @@ export function AppointmentForm() {
               autoComplete="tel"
               placeholder="03XX XXXXXXX"
               {...register("phone")}
-              className={`w-full min-h-[48px] rounded-[10px] border-2 bg-white px-3 py-2 text-base text-[#0F2A4A] transition-colors focus:outline-none ${
-                errors.phone
+              className={`w-full min-h-[48px] rounded-[10px] border-2 bg-white px-3 py-2 text-base text-[#0F2A4A] transition-colors focus:outline-none ${errors.phone
                   ? "border-red-500 focus:border-red-500"
                   : "border-[#5F7FAE] focus:border-[#2F6FD0]"
-              }`}
+                }`}
             />
             {errors.phone && (
               <p className="text-red-600 text-xs sm:text-sm font-medium mt-1">
@@ -162,11 +161,10 @@ export function AppointmentForm() {
             <select
               id="treatment"
               {...register("treatment")}
-              className={`w-full min-h-[48px] rounded-[10px] border-2 bg-white px-3 py-2 text-base text-[#0F2A4A] transition-colors focus:outline-none ${
-                errors.treatment
+              className={`w-full min-h-[48px] rounded-[10px] border-2 bg-white px-3 py-2 text-base text-[#0F2A4A] transition-colors focus:outline-none ${errors.treatment
                   ? "border-red-500 focus:border-red-500"
                   : "border-[#5F7FAE] focus:border-[#2F6FD0]"
-              }`}
+                }`}
             >
               <option value="">Select treatment</option>
               {treatments.map((treatment) => (
@@ -220,8 +218,13 @@ export function AppointmentForm() {
 
           {/* Privacy Note */}
           <p className="text-xs sm:text-sm text-[#3E5575] mt-3 leading-relaxed">
-            We call you back to confirm the time. Your number is used only for
-            your appointment.
+            We use your number only to call you about this request.{" "}
+            <Link
+              href="/privacy"
+              className="underline hover:text-[#0F2A4A] transition-colors"
+            >
+              Privacy policy
+            </Link>
           </p>
         </form>
       )}

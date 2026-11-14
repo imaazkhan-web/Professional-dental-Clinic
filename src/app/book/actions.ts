@@ -14,6 +14,29 @@ export type ActionResponse = {
 const GENERIC_ERROR_MESSAGE = "Something went wrong, please call us";
 const RATE_LIMIT_MESSAGE = "Too many requests, please call us";
 
+// Rate limit for requests without identifiable IP ("unknown" bucket) - lower limit (1 request per 5 min)
+const UNKNOWN_WINDOW_MS = 5 * 60 * 1000;
+const UNKNOWN_MAX_REQUESTS = 1;
+const unknownRequests: number[] = [];
+
+function checkUnknownRateLimit(): boolean {
+  const now = Date.now();
+  const activeTimestamps = unknownRequests.filter(
+    (timestamp) => now - timestamp < UNKNOWN_WINDOW_MS
+  );
+
+  if (activeTimestamps.length >= UNKNOWN_MAX_REQUESTS) {
+    unknownRequests.length = 0;
+    unknownRequests.push(...activeTimestamps);
+    return false;
+  }
+
+  activeTimestamps.push(now);
+  unknownRequests.length = 0;
+  unknownRequests.push(...activeTimestamps);
+  return true;
+}
+
 export async function createAppointment(
   data: unknown
 ): Promise<ActionResponse> {
@@ -36,14 +59,26 @@ export async function createAppointment(
       };
     }
 
-    // 3. IP Rate limit check: max 3 requests per 5 minutes per IP
+    // 3. IP Rate limit check: x-real-ip pehle, phir x-forwarded-for ka pehla hissa, warna "unknown" bucket (alag aur kam limit)
     const headerList = await headers();
+    const realIp = headerList.get("x-real-ip");
     const forwardedFor = headerList.get("x-forwarded-for");
-    const clientIp = forwardedFor
-      ? forwardedFor.split(",")[0].trim()
-      : headerList.get("x-real-ip") || "127.0.0.1";
 
-    if (!checkIpRateLimit(clientIp)) {
+    let clientIp: string;
+    if (realIp && realIp.trim().length > 0) {
+      clientIp = realIp.trim();
+    } else if (forwardedFor && forwardedFor.trim().length > 0) {
+      clientIp = forwardedFor.split(",")[0].trim();
+    } else {
+      clientIp = "unknown";
+    }
+
+    const isAllowed =
+      clientIp === "unknown"
+        ? checkUnknownRateLimit()
+        : checkIpRateLimit(clientIp);
+
+    if (!isAllowed) {
       return {
         success: false,
         message: RATE_LIMIT_MESSAGE,
@@ -69,10 +104,10 @@ export async function createAppointment(
       };
     }
 
+    // Duplicate hone par chupchap success return karo (insert aur email dono na ho)
     if (recentAppointments && recentAppointments.length > 0) {
       return {
-        success: false,
-        message: RATE_LIMIT_MESSAGE,
+        success: true,
       };
     }
 
@@ -91,17 +126,26 @@ export async function createAppointment(
       };
     }
 
-    // 7. Insert kamyab hone ke BAAD email notification bhejo
-    // Email fail ho to bhi appointment save rahe aur user ko success dikhe
-    try {
-      await sendAppointmentEmail({
-        fullName: validData.fullName,
-        phone: validData.phone,
-        treatment: validData.treatment,
-        preferredTime: validData.preferredTime,
-      });
-    } catch {
-      console.error("Failed to send appointment notification email");
+    // 7. Global email throttle: pichle 1 ghante me appointments me 20 se zyada rows hon to row save karo lekin email mat bhejo
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count } = await supabase
+      .from("appointments")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", oneHourAgo);
+
+    if (count !== null && count > 20) {
+      console.log("email throttled");
+    } else {
+      try {
+        await sendAppointmentEmail({
+          fullName: validData.fullName,
+          phone: validData.phone,
+          treatment: validData.treatment,
+          preferredTime: validData.preferredTime,
+        });
+      } catch {
+        console.error("Failed to send appointment notification email");
+      }
     }
 
     return {
