@@ -59,7 +59,68 @@ export async function createAppointment(
       };
     }
 
-    // 3. IP Rate limit check: x-real-ip pehle, phir x-forwarded-for ka pehla hissa, warna "unknown" bucket (alag aur kam limit)
+    // 3. Verify Cloudflare Turnstile token (Zod validation ke baad, IP rate limit se pehle)
+    const turnstileToken =
+      validData.turnstileToken ||
+      (typeof data === "object" && data !== null && "turnstileToken" in data
+        ? String((data as Record<string, unknown>).turnstileToken || "")
+        : "");
+
+    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+
+    if (!turnstileToken || !turnstileSecret) {
+      console.error("turnstile failed");
+      return {
+        success: false,
+        message: GENERIC_ERROR_MESSAGE,
+      };
+    }
+
+    try {
+      const verifyFormData = new URLSearchParams();
+      verifyFormData.append("secret", turnstileSecret);
+      verifyFormData.append("response", turnstileToken);
+
+      const turnstileRes = await fetch(
+        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: verifyFormData.toString(),
+          signal: AbortSignal.timeout(6000),
+        }
+      );
+
+      if (!turnstileRes.ok) {
+        console.error("turnstile failed");
+        return {
+          success: false,
+          message: GENERIC_ERROR_MESSAGE,
+        };
+      }
+
+      const turnstileOutcome = (await turnstileRes.json()) as {
+        success: boolean;
+      };
+
+      if (!turnstileOutcome.success) {
+        console.error("turnstile failed");
+        return {
+          success: false,
+          message: GENERIC_ERROR_MESSAGE,
+        };
+      }
+    } catch {
+      console.error("turnstile failed");
+      return {
+        success: false,
+        message: GENERIC_ERROR_MESSAGE,
+      };
+    }
+
+    // 4. IP Rate limit check: x-real-ip pehle, phir x-forwarded-for ka pehla hissa, warna "unknown" bucket (alag aur kam limit)
     const headerList = await headers();
     const realIp = headerList.get("x-real-ip");
     const forwardedFor = headerList.get("x-forwarded-for");
@@ -98,6 +159,9 @@ export async function createAppointment(
       .limit(1);
 
     if (checkError) {
+      if (checkError.code) {
+        console.error(checkError.code);
+      }
       return {
         success: false,
         message: GENERIC_ERROR_MESSAGE,
@@ -120,6 +184,9 @@ export async function createAppointment(
     });
 
     if (insertError) {
+      if (insertError.code) {
+        console.error(insertError.code);
+      }
       return {
         success: false,
         message: GENERIC_ERROR_MESSAGE,
@@ -151,7 +218,8 @@ export async function createAppointment(
     return {
       success: true,
     };
-  } catch {
+  } catch (err) {
+    console.error(err instanceof Error ? err.name : "Error");
     return {
       success: false,
       message: GENERIC_ERROR_MESSAGE,

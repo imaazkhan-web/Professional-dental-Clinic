@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Script from "next/script";
 import { AppointmentForm } from "@/components/AppointmentForm";
 
 export const metadata: Metadata = {
@@ -11,6 +12,11 @@ export const metadata: Metadata = {
 export default function BookPage() {
   return (
     <div className="w-full bg-white py-10 sm:py-14">
+      {/* Cloudflare Turnstile script loaded ONLY on /book page */}
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        strategy="afterInteractive"
+      />
       <div className="max-w-[720px] mx-auto px-6">
         {/* Breadcrumb Navigation (Home > Book) */}
         <nav

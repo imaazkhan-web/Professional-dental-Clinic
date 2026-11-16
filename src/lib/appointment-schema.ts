@@ -56,6 +56,7 @@ export const appointmentSchema = z.object({
     })
     .default("any"),
   website: z.string().max(200).optional(),
+  turnstileToken: z.string().optional(),
 });
 
 export type AppointmentInput = z.input<typeof appointmentSchema>;

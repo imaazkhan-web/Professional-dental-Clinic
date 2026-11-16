@@ -101,6 +101,9 @@ export default function PrivacyPage() {
             <p>
               To prevent abuse and repeated spam requests, your IP address is used temporarily for rate limiting. In addition, our hosting provider may maintain standard server access logs.
             </p>
+            <p className="mt-2 text-[#475569]">
+              This form uses Cloudflare Turnstile to prevent spam, which may process technical data like your IP address and browser details.
+            </p>
           </section>
 
           {/* How long */}
