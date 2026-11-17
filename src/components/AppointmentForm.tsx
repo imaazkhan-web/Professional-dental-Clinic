@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +12,7 @@ import {
 } from "@/lib/appointment-schema";
 import { createAppointment } from "@/app/book/actions";
 import { treatments } from "@/data/treatments";
+import { siteConfig } from "@/lib/site";
 
 declare global {
   interface Window {
@@ -35,9 +37,36 @@ export function AppointmentForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const [turnstileError, setTurnstileError] = useState<string | null>(null);
+
+  const [turnstileError, setTurnstileError] = useState<ReactNode | null>(null);
   const turnstileContainerRef = useRef<HTMLDivElement>(null);
   const turnstileWidgetIdRef = useRef<string | null>(null);
+
+  const getTurnstileLoadError = () => (
+    <span>
+      Verification could not load. Please call us on{" "}
+      <a
+        href={`tel:${siteConfig.phoneRaw}`}
+        className="underline hover:text-[#0F2A4A]"
+      >
+        {siteConfig.phone}
+      </a>{" "}
+      instead.
+    </span>
+  );
+
+  const getTurnstileFailedError = () => (
+    <span>
+      Verification failed. Please try again, or call us on{" "}
+      <a
+        href={`tel:${siteConfig.phoneRaw}`}
+        className="underline hover:text-[#0F2A4A]"
+      >
+        {siteConfig.phone}
+      </a>{" "}
+      instead.
+    </span>
+  );
 
   const {
     register,
@@ -55,13 +84,26 @@ export function AppointmentForm() {
     },
   });
 
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
   useEffect(() => {
-    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-    if (!siteKey) return;
+    // Only render widget when form is not submitted and siteKey is present
+    if (isSubmitted || !siteKey) return;
 
     let isMounted = true;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    const startTime = Date.now();
+
+    const clearTimer = () => {
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    };
 
     const renderTurnstile = () => {
+      if (!isMounted) return;
+
       if (
         window.turnstile &&
         turnstileContainerRef.current &&
@@ -90,7 +132,7 @@ export function AppointmentForm() {
               "error-callback": () => {
                 if (isMounted) {
                   setTurnstileToken(null);
-                  setTurnstileError("Verification failed. Please try again.");
+                  setTurnstileError(getTurnstileFailedError());
                   if (turnstileWidgetIdRef.current && window.turnstile) {
                     window.turnstile.reset(turnstileWidgetIdRef.current);
                   }
@@ -98,28 +140,39 @@ export function AppointmentForm() {
               },
             }
           );
-        } catch {
-          // ignore render error
+          clearTimer();
+        } catch (err) {
+          console.error(err instanceof Error ? err.name : "Error");
+          if (isMounted) {
+            setTurnstileToken(null);
+            setTurnstileError(getTurnstileLoadError());
+          }
+          clearTimer();
         }
+      } else if (!turnstileWidgetIdRef.current && Date.now() - startTime >= 10000) {
+        if (isMounted) {
+          setTurnstileError(getTurnstileLoadError());
+        }
+        clearTimer();
       }
     };
 
+    intervalId = setInterval(renderTurnstile, 200);
     renderTurnstile();
-    const interval = setInterval(renderTurnstile, 200);
 
     return () => {
       isMounted = false;
-      clearInterval(interval);
+      clearTimer();
       if (turnstileWidgetIdRef.current && window.turnstile) {
         try {
           window.turnstile.remove(turnstileWidgetIdRef.current);
         } catch {
           // ignore
         }
-        turnstileWidgetIdRef.current = null;
       }
+      turnstileWidgetIdRef.current = null;
     };
-  }, []);
+  }, [isSubmitted, siteKey]);
 
   const onSubmit = async (data: AppointmentInput) => {
     if (!turnstileToken) {
@@ -156,10 +209,9 @@ export function AppointmentForm() {
     setTurnstileError(null);
     setTurnstileToken(null);
     setIsSubmitted(false);
-    if (turnstileWidgetIdRef.current && window.turnstile) {
-      window.turnstile.reset(turnstileWidgetIdRef.current);
-    }
   };
+
+  const displayedTurnstileError = !siteKey ? getTurnstileLoadError() : turnstileError;
 
   return (
     <div
@@ -191,7 +243,7 @@ export function AppointmentForm() {
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-2 space-y-3.5 relative" noValidate>
+        <form onSubmit={(e) => handleSubmit(onSubmit)(e)} className="mt-2 space-y-3.5 relative" noValidate>
           {/* Honeypot field (hidden via CSS, not display:none, aria-hidden, tabIndex -1, autocomplete off) */}
           <div
             className="absolute opacity-0 pointer-events-none -z-50 h-0 w-0 overflow-hidden"
@@ -319,10 +371,10 @@ export function AppointmentForm() {
           {/* Cloudflare Turnstile Widget */}
           <div className="my-2 min-h-[65px] flex flex-col justify-center">
             <div ref={turnstileContainerRef} />
-            {turnstileError && (
-              <p className="text-red-600 text-xs sm:text-sm font-medium mt-1.5">
-                {turnstileError}
-              </p>
+            {displayedTurnstileError && (
+              <div className="text-red-600 text-xs sm:text-sm font-medium mt-1.5">
+                {displayedTurnstileError}
+              </div>
             )}
           </div>
 
