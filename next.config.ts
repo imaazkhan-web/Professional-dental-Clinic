@@ -1,5 +1,20 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV === "development";
+
+const cspHeader = `
+    default-src 'self';
+    script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://challenges.cloudflare.com;
+    frame-src https://challenges.cloudflare.com https://www.google.com https://maps.google.com;
+    img-src 'self' data: blob:;
+    style-src 'self' 'unsafe-inline';
+    connect-src 'self' https://challenges.cloudflare.com;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    frame-ancestors 'none';
+`;
+
 const nextConfig: NextConfig = {
   /* config options here */
   turbopack: {
@@ -30,6 +45,10 @@ const nextConfig: NextConfig = {
           {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
+          },
+          {
+            key: "Content-Security-Policy-Report-Only",
+            value: cspHeader.replace(/\s{2,}/g, " ").trim(),
           },
         ],
       },
