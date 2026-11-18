@@ -89,7 +89,7 @@ export default function PrivacyPage() {
               Please note that servers for these providers may be located outside Pakistan.
             </p>
             <p className="mt-2 text-[#475569]">
-              In our &ldquo;Find us&rdquo; section, we embed a Google Maps frame. When this map loads, Google may receive your IP address and device information.
+              The map loads only when you choose to load it. Google may then receive your IP address and device information.
             </p>
           </section>
 
