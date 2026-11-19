@@ -103,7 +103,7 @@ export function FindUs() {
                   style={{ border: 0 }}
                   allowFullScreen={false}
                   loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
+                  referrerPolicy="strict-origin-when-cross-origin"
                   title="Google Maps Location - Professional Dental Clinic"
                   className="w-full h-full"
                 />
