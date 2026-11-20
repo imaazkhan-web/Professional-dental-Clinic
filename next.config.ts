@@ -8,7 +8,7 @@ const cspHeader = `
     frame-src https://challenges.cloudflare.com https://www.google.com https://maps.google.com;
     img-src 'self' data: blob:;
     style-src 'self' 'unsafe-inline';
-    connect-src 'self' https://challenges.cloudflare.com;
+    connect-src 'self' https://challenges.cloudflare.com https://*.supabase.co;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
@@ -28,6 +28,24 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      {
+        source: "/admin/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, must-revalidate",
+          },
+        ],
+      },
+      {
+        source: "/admin",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, must-revalidate",
+          },
+        ],
+      },
       {
         source: "/(.*)",
         headers: [

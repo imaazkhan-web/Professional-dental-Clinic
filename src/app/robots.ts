@@ -6,8 +6,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       // NOTE: Abhi practice project ke liye site noindex rakhi hai.
-      // Real clinic launch ke waqt disallow hata kar allow: "/" karna hai.
-      disallow: "/",
+      // Real clinic launch ke waqt disallow hata kar allow: "/" karna hai, lekin /admin hamesha disallow rahega.
+      disallow: ["/", "/admin"],
     },
     sitemap: `${siteUrl}/sitemap.xml`,
   };
