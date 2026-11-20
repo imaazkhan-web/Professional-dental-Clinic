@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Inter_Tight } from "next/font/google";
 import "./globals.css";
-import { TopBar } from "@/components/TopBar";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import { MobileCallBar } from "@/components/MobileCallBar";
+import { PublicShell } from "@/components/PublicShell";
 import { siteConfig } from "@/lib/site";
 
 const inter = Inter({
@@ -56,11 +53,7 @@ export default function RootLayout({
         className="min-h-full flex flex-col text-[#0F2A4A] bg-white font-sans pb-16 md:pb-0"
         suppressHydrationWarning
       >
-        <TopBar />
-        <Navbar />
-        <div className="flex-1 flex flex-col">{children}</div>
-        <Footer />
-        <MobileCallBar />
+        <PublicShell>{children}</PublicShell>
       </body>
     </html>
   );
